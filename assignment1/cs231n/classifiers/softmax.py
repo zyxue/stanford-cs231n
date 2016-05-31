@@ -45,8 +45,20 @@ def softmax_loss_naive(W, X, y, reg):
     #   print(denominator)
     loss += - np.log(numerator / denominator)
 
+    # inspired from
+    # http://cs231n.github.io/linear-classify/#softmax
+    # https://github.com/MyHumbleSelf/cs231n/blob/master/assignment1/cs231n/classifiers/softmax.py
+    exp_scores = np.exp(scores)
+    denom_sum = np.sum(exp_scores)
+    for j in xrange(num_classes):
+      p = exp_scores / denom_sum
+      dW[:,j] += (p[j] - (j == y[i])) * X[i]
+
   loss /= num_train
   loss += 0.5 * reg * np.sum(W * W)
+
+  dW /= num_train
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
