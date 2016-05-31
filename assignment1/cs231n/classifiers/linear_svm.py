@@ -106,9 +106,40 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+
+  # # 3073 x 10
+  # print(dW.shape)
+  # # 500 x 3073
+  # print(X.shape)
+  # # 500 x 10
+  # print(margins.shape)
+
+  # print(margins[0:2])
+  # print(y[0:2])
+
+  # inspired from
+  # https://github.com/huyouare/CS231n/blob/master/assignment1/cs231n/classifiers/linear_svm.py
+  margins[margins > 0] = 1
+  margins[margins < 0] = 0
+  margins[np.arange(num_train), y] = -1 * margins.sum(axis=1)
+  dW = X.T.dot(margins)
+
+  # try to vectorize loop-by-loop
+  # for i in xrange(num_train):
+    # dW += X[i].reshape(1, -1).T.dot(margins[i].reshape(1, -1) > 0)
+    # dW[:,y[i]] -= (X[i].reshape(1, -1).T.dot(margins[i].reshape(1, -1) > 0)).sum(axis=1)
+
+    # for j in xrange(num_classes):
+    #   if j == y[i]:
+    #     continue
+    #   marg = margins[i][j]
+    #   if marg > 0:
+    #     dW[:,j] += X[i]
+    #     dW[:,y[i]] -= X[i]
+
+  dW /= num_train
+  dW += reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
-
   return loss, dW
