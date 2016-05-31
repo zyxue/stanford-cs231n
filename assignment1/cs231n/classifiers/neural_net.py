@@ -84,7 +84,7 @@ class TwoLayerNet(object):
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
-    
+
     # If the targets are not given then jump out, we're done
     if y is None:
       return scores
@@ -98,7 +98,18 @@ class TwoLayerNet(object):
     # classifier loss. So that your results match ours, multiply the            #
     # regularization loss by 0.5                                                #
     #############################################################################
-    pass
+
+    # adapted from softmax_loss_vectorized in softmax.py
+    # for numerical stability
+    num_train = X.shape[0]
+    log_c = np.exp(- scores.max())
+    exp_scores = log_c * np.exp(scores)
+    exp_scores_sum = np.sum(exp_scores, axis=1)
+    probs = (exp_scores.T / exp_scores_sum).T
+    loss = np.sum(- np.log(probs[np.arange(num_train), y]))
+    loss /= num_train
+    loss += 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
