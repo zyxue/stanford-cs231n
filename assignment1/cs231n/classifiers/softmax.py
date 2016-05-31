@@ -32,10 +32,16 @@ def softmax_loss_naive(W, X, y, reg):
   loss = 0.0
   for i in xrange(num_train):
     scores = X[i].dot(W)
+    # print(scores)
 
-    exp_scores = np.exp(scores)
-    denom_sum = np.sum(exp_scores)
-    probs = exp_scores / denom_sum
+    # for numerical stability purpose: http://cs231n.github.io/linear-classify/
+    log_c = np.exp(- scores.max())
+
+    exp_scores = log_c * np.exp(scores)
+
+    scores_sum = np.sum(exp_scores)
+
+    probs = exp_scores / scores_sum
     loss += - np.log(probs[y[i]])
 
     # inspired from
@@ -66,13 +72,35 @@ def softmax_loss_vectorized(W, X, y, reg):
   loss = 0.0
   dW = np.zeros_like(W)
 
+  num_train = X.shape[0]
+  num_classes = W.shape[1]
+
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
   # Store the loss in loss and the gradient in dW. If you are not careful     #
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  # 500 x 10
+  scores = X.dot(W)
+
+  # for numerical stability purpose: http://cs231n.github.io/linear-classify/
+  log_c = np.exp(- scores.max())
+
+  exp_scores = log_c * np.exp(scores)
+
+  # 500,
+  scores_sum = np.sum(exp_scores, axis=1)
+
+  # 500 x 10
+  probs = (exp_scores.T / scores_sum).T
+
+  loss = np.sum(- np.log(probs[np.arange(num_train), y]))
+
+  loss /= num_train
+  loss += 0.5 * reg * np.sum(W * W)
+
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
