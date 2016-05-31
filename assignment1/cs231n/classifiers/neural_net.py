@@ -74,7 +74,13 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    hidden_layer = np.maximum(0, X.dot(W1) + b1) # ReLU activation
+    scores = hidden_layer.dot(W2) + b2
+    # print(X.shape)
+    # print(W1.shape)
+    # print(b1)
+    # print(W2.shape)
+    # print(b2)
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
