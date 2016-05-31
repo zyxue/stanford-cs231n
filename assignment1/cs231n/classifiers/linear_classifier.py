@@ -84,12 +84,21 @@ class LinearClassifier(object):
       array of length N, and each element is an integer giving the predicted
       class.
     """
-    y_pred = np.zeros(X.shape[1])
     ###########################################################################
     # TODO:                                                                   #
     # Implement this method. Store the predicted labels in y_pred.            #
     ###########################################################################
-    pass
+    # (3073, 10)
+    print(self.W.shape)
+    # (49000, 3073)
+    print(X.shape)
+
+    res = X.dot(self.W)
+
+    # (49000, 10)
+    print(res.shape)
+
+    y_pred = res.argmax(axis=1)
     ###########################################################################
     #                           END OF YOUR CODE                              #
     ###########################################################################
