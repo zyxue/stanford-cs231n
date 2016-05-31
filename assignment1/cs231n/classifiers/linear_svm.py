@@ -71,6 +71,7 @@ def svm_loss_vectorized(W, X, y, reg):
   dW = np.zeros(W.shape)        # initialize the gradient as zero
 
   num_train = X.shape[0]
+  num_classes = W.shape[1]
   delta = 1
 
   #############################################################################
@@ -78,17 +79,19 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
+  # 500 x 10
   scores = X.dot(W)
   # http://stackoverflow.com/questions/23435782/numpy-selecting-specific-column-index-per-row-by-using-a-list-of-indexes
-  correct_class_scores = scores[np.arange(scores.shape[0]), y]
-  margin = scores - correct_class_scores.reshape([-1, 1])
-  # remove j == y[i] case
-  margin = margin[margin != 0]
-  margin += delta
-  loss = np.sum(margin[margin > 0])
+  # 500 x 1
+  correct_class_scores = scores[np.arange(num_train), y].reshape([-1, 1])
+  # 500 x 10
+  margins = scores - correct_class_scores
+  # don't remove j == y[i] case directly for convenience when calculating dW
+  margins[np.arange(num_train), y] = - delta
+  margins += delta
+  loss = np.sum(margins[margins > 0])
   loss /= num_train
   loss += 0.5 * reg * np.sum(W * W)
-
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
