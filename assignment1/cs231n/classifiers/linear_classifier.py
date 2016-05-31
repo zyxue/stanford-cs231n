@@ -88,15 +88,15 @@ class LinearClassifier(object):
     # TODO:                                                                   #
     # Implement this method. Store the predicted labels in y_pred.            #
     ###########################################################################
-    # (3073, 10)
-    print(self.W.shape)
-    # (49000, 3073)
-    print(X.shape)
+    # # (3073, 10)
+    # print(self.W.shape)
+    # # (49000, 3073)
+    # print(X.shape)
 
     res = X.dot(self.W)
 
-    # (49000, 10)
-    print(res.shape)
+    # # (49000, 10)
+    # print(res.shape)
 
     y_pred = res.argmax(axis=1)
     ###########################################################################
