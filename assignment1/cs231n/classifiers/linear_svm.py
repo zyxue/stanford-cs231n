@@ -62,15 +62,29 @@ def svm_loss_vectorized(W, X, y, reg):
 
   Inputs and outputs are the same as svm_loss_naive.
   """
+
   loss = 0.0
-  dW = np.zeros(W.shape) # initialize the gradient as zero
+  dW = np.zeros(W.shape)        # initialize the gradient as zero
+
+  num_train = X.shape[0]
+  delta = 1
 
   #############################################################################
   # TODO:                                                                     #
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+  # http://stackoverflow.com/questions/23435782/numpy-selecting-specific-column-index-per-row-by-using-a-list-of-indexes
+  correct_class_scores = scores[np.arange(scores.shape[0]), y]
+  margin = scores - correct_class_scores.reshape([-1, 1])
+  # remove j == y[i] case
+  margin = margin[margin != 0]
+  margin += delta
+  loss = np.sum(margin[margin > 0])
+  loss /= num_train
+  loss += 0.5 * reg * np.sum(W * W)
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
