@@ -121,7 +121,32 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+
+    # http://cs231n.github.io/neural-networks-case-study/
+    dscores = probs
+    dscores[np.arange(num_train), y] -= 1
+    dscores /= num_train
+    dW2 = hidden_layer.T.dot(dscores)
+    # print(dW2.shape)
+    # print(W2.shape)
+    # print(reg)
+    dW2 += reg * W2
+    db2 = np.sum(dscores, axis=0, keepdims=True)
+    grads['W2'] = dW2
+    grads['b2'] = db2
+
+    # heavily adapted from
+    # https://github.com/huyouare/CS231n/blob/master/assignment2/cs231n/classifiers/neural_net.py
+
+    # backprop into the hidden layer
+    dhidden = dscores.dot(W2.T)
+    # ReLU non-linearity
+    dhidden[hidden_layer <= 0] =0
+    dW1 = X.T.dot(dhidden)
+    dW1 += reg * W1
+    db1 = np.sum(dhidden, axis=0)
+    grads['W1'] = dW1
+    grads['b1'] = db1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
