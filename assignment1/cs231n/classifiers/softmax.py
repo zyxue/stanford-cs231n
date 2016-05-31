@@ -45,7 +45,7 @@ def softmax_loss_naive(W, X, y, reg):
     loss += - np.log(probs[y[i]])
 
     # inspired from
-    # http://cs231n.github.io/linear-classify/#softmax
+    # http://cs231n.github.io/neural-networks-case-study/
     # https://github.com/MyHumbleSelf/cs231n/blob/master/assignment1/cs231n/classifiers/softmax.py
     for j in xrange(num_classes):
       dW[:, j] += (probs[j] - (j == y[i])) * X[i]
@@ -97,10 +97,17 @@ def softmax_loss_vectorized(W, X, y, reg):
 
   loss = np.sum(- np.log(probs[np.arange(num_train), y]))
 
+  zero_ones = np.zeros(probs.shape)
+  # when y_i == j, set the element to 1
+  # http://cs231n.github.io/neural-networks-case-study/
+  zero_ones[np.arange(num_train), y] = 1
+  dW = X.T.dot(probs - zero_ones)
+
   loss /= num_train
   loss += 0.5 * reg * np.sum(W * W)
 
-
+  dW /= num_train
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
