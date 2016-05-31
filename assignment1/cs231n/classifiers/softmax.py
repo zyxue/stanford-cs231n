@@ -19,8 +19,6 @@ def softmax_loss_naive(W, X, y, reg):
   - loss as single float
   - gradient with respect to weights W; an array of same shape as W
   """
-  # Initialize the loss and gradient to zero.
-  loss = 0.0
   dW = np.zeros_like(W)
 
   #############################################################################
@@ -29,7 +27,26 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+  loss = 0.0
+  for i in xrange(num_train):
+    scores = X[i].dot(W)
+    correct_class_score = scores[y[i]]
+    numerator = 0
+    denominator = 0
+    for j in xrange(num_classes):
+      if j == y[i]:
+        numerator = np.exp(scores[j])
+      denominator += np.exp(scores[j])
+
+    # if i == 0:
+    #   print(numerator)
+    #   print(denominator)
+    loss += - np.log(numerator / denominator)
+
+  loss /= num_train
+  loss += 0.5 * reg * np.sum(W * W)
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
