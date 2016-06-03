@@ -84,27 +84,18 @@ def softmax_loss_vectorized(W, X, y, reg):
   # 500 x 10
   scores = X.dot(W)
 
-  # for numerical stability purpose: http://cs231n.github.io/linear-classify/
-  log_c = np.exp(- scores.max())
-
-  exp_scores = log_c * np.exp(scores)
-
-  # 500,
-  scores_sum = np.sum(exp_scores, axis=1)
-
-  # 500 x 10
-  probs = (exp_scores.T / scores_sum).T
-
-  loss = np.sum(- np.log(probs[np.arange(num_train), y]))
+  # np.max(): for numerical stability purpose:
+  # http://cs231n.github.io/linear-classify/
+  probs = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+  probs /= np.sum(probs, axis=1, keepdims=True)
+  loss = -np.sum(np.log(probs[np.arange(num_train), y])) / num_train
+  loss /= num_train
+  loss += 0.5 * reg * np.sum(W * W)
 
   # when y_i == j, set the element to 1
   # http://cs231n.github.io/neural-networks-case-study/
   probs[np.arange(num_train), y] -= 1
   dW = X.T.dot(probs)
-
-  loss /= num_train
-  loss += 0.5 * reg * np.sum(W * W)
-
   dW /= num_train
   dW += reg * W
   #############################################################################
