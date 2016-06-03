@@ -87,7 +87,7 @@ def relu_backward(dout, cache):
   Computes the backward pass for a layer of rectified linear units (ReLUs).
 
   Input:
-  - dout: Upstream derivatives, of any shape
+  - dout: Upstream derivatives, of any shape (N, M)
   - cache: Input x, of same shape as dout
 
   Returns:
@@ -97,7 +97,7 @@ def relu_backward(dout, cache):
   #############################################################################
   # TODO: Implement the ReLU backward pass.                                   #
   #############################################################################
-  pass
+  dx = np.where(x > 0, dout, 0)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
