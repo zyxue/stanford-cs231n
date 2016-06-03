@@ -85,10 +85,8 @@ def svm_loss_vectorized(W, X, y, reg):
   # 500 x 1
   correct_class_scores = scores[np.arange(num_train), y].reshape([-1, 1])
   # 500 x 10
-  margins = scores - correct_class_scores
-  # don't remove j == y[i] case directly for convenience when calculating dW
-  margins[np.arange(num_train), y] = - delta
-  margins += delta
+  margins = np.maximum(0, scores - correct_class_scores + delta)
+  margins[np.arange(num_train), y] = 0
   loss = np.sum(margins[margins > 0])
   loss /= num_train
   loss += 0.5 * reg * np.sum(W * W)
@@ -120,7 +118,6 @@ def svm_loss_vectorized(W, X, y, reg):
   # inspired from
   # https://github.com/huyouare/CS231n/blob/master/assignment1/cs231n/classifiers/linear_svm.py
   margins[margins > 0] = 1
-  margins[margins < 0] = 0
   margins[np.arange(num_train), y] = -1 * margins.sum(axis=1)
   dW = X.T.dot(margins)
 
