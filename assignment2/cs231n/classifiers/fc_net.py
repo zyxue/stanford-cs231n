@@ -78,6 +78,7 @@ class TwoLayerNet(object):
     # TODO: Implement the forward pass for the two-layer net, computing the    #
     # class scores for X and storing them in the scores variable.              #
     ############################################################################
+    X = X.reshape(X.shape[0], -1)
     W1, b1 = self.params['W1'], self.params['b1']
     W2, b2 = self.params['W2'], self.params['b2']
     N, D = X.shape
@@ -109,12 +110,16 @@ class TwoLayerNet(object):
     loss, dout = softmax_loss(scores, y)
     loss += 0.5 * self.reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
 
-    affine2_dout, grads['W2'], grads['b1'] = affine_backward(dout, affine2_cache)
+    affine2_dout, grads['W2'], grads['b2'] = affine_backward(dout, affine2_cache)
     relu1_dout = relu_backward(affine2_dout, relu1_cache)
     affine1_dout, grads['W1'], grads['b1'] = affine_backward(relu1_dout, affine1_cache)
+
+    grads['W2'] = grads['W2'] + self.reg * W2
+    grads['W1'] = grads['W1'] + self.reg * W1
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
+
     return loss, grads
 
 
