@@ -147,8 +147,11 @@ def batchnorm_forward(x, gamma, beta, bn_param):
   momentum = bn_param.get('momentum', 0.9)
 
   N, D = x.shape
-  running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
-  running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
+  # running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
+  # running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
+  running_mean = bn_param.get('running_mean', np.mean(x, axis=0))
+  running_var = bn_param.get('running_var', np.var(x, axis=0))
+
 
   out, cache = None, None
   if mode == 'train':
@@ -165,7 +168,14 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # the momentum variable to update the running mean and running variance,    #
     # storing your result in the running_mean and running_var variables.        #
     #############################################################################
-    pass
+    out = (x - running_mean) / np.sqrt(running_var)
+    out = out * gamma - beta
+    sample_mean = np.mean(out, axis=0)
+    sample_var = np.var(x, axis=0)
+
+    running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+    running_var = momentum * running_var + (1 - momentum) * sample_var
+
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
