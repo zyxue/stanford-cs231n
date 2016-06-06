@@ -189,6 +189,9 @@ class FullyConnectedNet(object):
       b = np.zeros(dim_j)
       self.params['W{0}'.format(k + 1)] = w
       self.params['b{0}'.format(k + 1)] = b
+      if self.use_batchnorm:
+        self.params['gamma{0}'.format(k + 1)] = np.random.randn(dim_j)
+        self.params['beta{0}'.format(k + 1)] = np.random.randn(dim_j)
       # print(w.shape, b.shape)
     ############################################################################
     #                             END OF YOUR CODE                             #
@@ -249,14 +252,20 @@ class FullyConnectedNet(object):
     ############################################################################
     caches = {}
     # there is a Wi & bi for each layer)
-    len_layers = len(self.params.keys()) / 2
     scores = X
-    for i in xrange(len_layers):
+    for i in xrange(self.num_layers):
       w_key = 'W{0}'.format(i + 1)
       b_key = 'b{0}'.format(i + 1)
       # print(self.params[w_key].shape)
-      if i < len_layers - 1:
+      if i < self.num_layers - 1:
         scores, affine_cache = affine_forward(scores, self.params[w_key], self.params[b_key])
+        if self.use_batchnorm:
+          scores, bn_cache = batchnorm_forward(
+            scores,
+            self.params['gamma{0}'.format(i + 1)],
+            self.params['beta{0}'.format(i + 1)],
+            self.bn_params[i])
+          caches['bn{0}'.format(i + 1)] = bn_cache
         scores, relu_cache = relu_forward(scores)
         caches['relu{0}'.format(i + 1)] = relu_cache
       else:
@@ -287,15 +296,18 @@ class FullyConnectedNet(object):
     ############################################################################
     loss, dscores = softmax_loss(scores, y)
     loss_reg = 0
-    for i in reversed(xrange(len_layers)):
+    for i in reversed(xrange(self.num_layers)):
       w_key = 'W{0}'.format(i + 1)
       b_key = 'b{0}'.format(i + 1)
       affine_key = 'affine{0}'.format(i + 1)
-      if i > 0:
+      if i == self.num_layers - 1:
         dscores, grads[w_key], grads[b_key] = affine_backward(dscores, caches[affine_key])
-        relu_key = 'relu{0}'.format(i)
+      else:
+        relu_key = 'relu{0}'.format(i + 1)
         dscores = relu_backward(dscores, caches[relu_key])
-      else:                     # i == 0
+        if self.use_batchnorm:
+          bn_key = 'bn{0}'.format(i + 1)
+          dscores, grads['gamma{0}'.format(i + 1)], grads['beta{0}'.format(i + 1)] = batchnorm_backward(dscores, caches[bn_key])
         dscores, grads[w_key], grads[b_key] = affine_backward(dscores, caches[affine_key])
 
       grads[w_key] = grads[w_key] + self.reg * self.params[w_key]
