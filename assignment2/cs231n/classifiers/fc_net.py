@@ -258,6 +258,7 @@ class FullyConnectedNet(object):
       # print(self.params[w_key].shape)
       if i < self.num_layers - 1:
         scores, affine_cache = affine_forward(scores, self.params[w_key], self.params[b_key])
+
         if self.use_batchnorm:
           scores, bn_cache = batchnorm_forward(
             scores,
@@ -265,8 +266,13 @@ class FullyConnectedNet(object):
             self.params['beta{0}'.format(i + 1)],
             self.bn_params[i])
           caches['bn{0}'.format(i + 1)] = bn_cache
+
         scores, relu_cache = relu_forward(scores)
         caches['relu{0}'.format(i + 1)] = relu_cache
+
+        if self.use_dropout:
+          scores, dropout_cache = dropout_forward(scores, self.dropout_param)
+          caches['dropout{0}'.format(i + 1)] = dropout_cache
       else:
         scores, affine_cache = affine_forward(scores, self.params[w_key], self.params[b_key])
       caches['affine{0}'.format(i + 1)] = affine_cache
@@ -302,11 +308,17 @@ class FullyConnectedNet(object):
       if i == self.num_layers - 1:
         dscores, grads[w_key], grads[b_key] = affine_backward(dscores, caches[affine_key])
       else:
+        if self.use_dropout:
+          dropout_key = 'dropout{0}'.format(i + 1)
+          dscores = dropout_backward(dscores, caches[dropout_key])
+
         relu_key = 'relu{0}'.format(i + 1)
         dscores = relu_backward(dscores, caches[relu_key])
+
         if self.use_batchnorm:
           bn_key = 'bn{0}'.format(i + 1)
           dscores, grads['gamma{0}'.format(i + 1)], grads['beta{0}'.format(i + 1)] = batchnorm_backward(dscores, caches[bn_key])
+
         dscores, grads[w_key], grads[b_key] = affine_backward(dscores, caches[affine_key])
 
       grads[w_key] = grads[w_key] + self.reg * self.params[w_key]
