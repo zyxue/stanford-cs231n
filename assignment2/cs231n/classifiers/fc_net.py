@@ -189,10 +189,9 @@ class FullyConnectedNet(object):
       b = np.zeros(dim_j)
       self.params['W{0}'.format(k + 1)] = w
       self.params['b{0}'.format(k + 1)] = b
-      if self.use_batchnorm:
+      if self.use_batchnorm and k < self.num_layers - 1:
         self.params['gamma{0}'.format(k + 1)] = np.random.randn(dim_j)
         self.params['beta{0}'.format(k + 1)] = np.random.randn(dim_j)
-      # print(w.shape, b.shape)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
