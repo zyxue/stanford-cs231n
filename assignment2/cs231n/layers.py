@@ -387,12 +387,40 @@ def conv_forward_naive(x, w, b, conv_param):
     W' = 1 + (W + 2 * pad - WW) / stride
   - cache: (x, w, b, conv_param)
   """
-  out = None
   #############################################################################
   # TODO: Implement the convolutional forward pass.                           #
   # Hint: you can use the function np.pad for padding.                        #
   #############################################################################
-  pass
+  N, C, H, W = x.shape
+  F, C, HH, WW = w.shape
+  stride = conv_param['stride']
+  pad = conv_param['pad']
+  Hprime = 1 + (H + 2 * pad - HH) / stride
+  Wprime = 1 + (W + 2 * pad - WW) / stride
+
+  out = []
+  for ni in xrange(N):
+    out.append([])
+    for ci in xrange(C):
+      out[ni].append([])
+      xi_padded = np.pad(x[ni][ci], pad, 'constant')
+      for fi in xrange(F):
+        wi = w[fi, ci, :, :]
+        wi = wi.reshape(1, -1)
+        out[ni][ci].append(np.zeros([Hprime, Wprime]))
+        # c_out: out for a specific channel
+        c_out = out[ni][ci][fi]
+        for hpi in xrange(Hprime):
+          for wpi in xrange(Wprime):
+            # xi_conv the part of xi that will be convolved with wi
+            xi_conv = xi_padded[hpi*stride:hpi*stride+HH,
+                                wpi*stride:wpi*stride+WW]
+            xi_conv = xi_conv.reshape(1, -1)
+            # b[fi] / C: because it will be summed over the channel axis later
+            c_out[hpi][wpi] = wi.dot(xi_conv.T) + b[fi] / C 
+  # sum along the channel axis
+  out = np.array(out).sum(axis=1)
+  print('out.shape: {0}'.format(out.shape))
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
