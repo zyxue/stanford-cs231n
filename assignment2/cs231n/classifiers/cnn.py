@@ -124,8 +124,6 @@ class ThreeLayerConvNet(object):
     dscores, grads['W2'], grads['b2'] = affine_relu_backward(dscores, cache2)
     dscores, grads['W1'], grads['b1'] = conv_relu_pool_backward(dscores, cache1)
 
-    grads['W3'] = -grads['W3']
-
     grads['W3'] += self.reg * W3
     grads['W2'] += self.reg * W2
     grads['W1'] += self.reg * W1
