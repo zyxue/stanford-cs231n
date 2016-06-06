@@ -471,24 +471,54 @@ def conv_backward_naive(dout, cache):
   N, F, Ho, Wo = dout.shape
   F, C, HH, WW = w.shape
 
-  # remove padding
-  dx = np.zeros(x[:, :, 1:-1, 1:-1].shape)
+  dx = np.zeros(x.shape)
   dw = np.zeros(w.shape)
   db = np.zeros(b.shape)        # (F, )
 
-  for ni in xrange(N):
-    for fi in xrange(F):
-      db[fi] += np.sum(dout[ni, fi])
-      for ci in xrange(C):
-        for hhi in xrange(HH):
-          for wwi in xrange(WW):
-            for hoi in xrange(Ho):
-              for woi in xrange(Wo):
-                dw[fi, ci, hhi, wwi] += (
-                  x[ni, ci, hoi*stride + hhi, woi*stride + wwi] *
-                  dout[ni, fi, hoi, woi])
+  N, C, H, W = dx.shape
 
+  # My solution is still wrong, cannot find out why 2016--06-06
 
+  # for ni in xrange(N):
+  #   for fi in xrange(F):
+  #     db[fi] += np.sum(dout[ni, fi])
+  #     for ci in xrange(C):
+  #       for hhi in xrange(HH):
+  #         for wwi in xrange(WW):
+  #           for hoi in xrange(Ho):
+  #             for woi in xrange(Wo):
+  #               dw[fi, ci, hhi, wwi] += (
+  #                 x[ni, ci, hoi*stride + hhi, woi*stride + wwi] *
+  #                 dout[ni, fi, hoi, woi])
+
+  #       for hi in xrange(H):
+  #         for wi in xrange(W):
+  #           for hoi in xrange(Ho):
+  #             for woi in xrange(Wo):
+  #               # map (hoi, woi) to areas invoved in H x W
+  #               hi_margin_min = hoi * stride
+  #               hi_margin_max = hoi * stride + HH
+  #               wi_margin_min = woi * stride
+  #               wi_margin_max = woi * stride + WW
+  #               if (hi_margin_min <= hi < hi_margin_max and
+  #                   wi_margin_min <= wi < wi_margin_max):
+  #                 dx[ni, ci, hi, wi] += (
+  #                   w[fi, ci, hi_margin_max - hi -1, wi_margin_max - wi -1] * dout[ni, fi, hoi, woi]
+  #                 )
+
+  # # https://github.com/bagavi/CS231N/blob/master/assignment2%20copy/cs231n/layers.py
+  db = np.sum(dout ,axis=(0,2,3))
+  # Calculating the shape of X again
+  for i1 in xrange(N):
+    for i2 in xrange(F):
+      for i3 in xrange(Ho):
+        for i4 in xrange(Wo):
+          # so cool!
+          dx[i1, : , i3*stride:i3*stride+HH, i4*stride:i4*stride+WW] += w[i2,:,:,:]*dout[i1,i2,i3,i4]
+          dw[i2,:,:,:] += x[i1, : , i3*stride:i3*stride+HH, i4*stride:i4*stride+WW]*dout[i1,i2,i3,i4]
+
+  # remove padding
+  dx = dx[:, :, pad:-pad, pad:-pad]
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
