@@ -118,7 +118,9 @@ class ThreeLayerConvNet(object):
     # for self.params[k]. Don't forget to add L2 regularization!               #
     ############################################################################
     loss, dscores = softmax_loss(scores, y)
-    loss += 0.5 * self.reg * (np.sum(W1 * W1) + np.sum(W2 * W2)) + np.sum(W3 * W3)
+    loss += 0.5 * self.reg * (np.sum(W1 * W1) +
+                              np.sum(W2 * W2) +
+                              np.sum(W3 * W3))
 
     dscores, grads['W3'], grads['b3'] = affine_backward(dscores, cache3)
     dscores, grads['W2'], grads['b2'] = affine_relu_backward(dscores, cache2)
