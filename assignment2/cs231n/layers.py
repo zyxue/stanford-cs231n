@@ -147,11 +147,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
   momentum = bn_param.get('momentum', 0.9)
 
   N, D = x.shape
-  # running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
-  # running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
-  running_mean = bn_param.get('running_mean', np.mean(x, axis=0))
-  running_var = bn_param.get('running_var', np.var(x, axis=0))
-
+  running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
+  running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
 
   out, cache = None, None
   if mode == 'train':
@@ -168,13 +165,16 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # the momentum variable to update the running mean and running variance,    #
     # storing your result in the running_mean and running_var variables.        #
     #############################################################################
-    out = (x - running_mean) / np.sqrt(running_var)
-    out = out * gamma - beta
-    sample_mean = np.mean(out, axis=0)
+    sample_mean = np.mean(x, axis=0)
     sample_var = np.var(x, axis=0)
 
     running_mean = momentum * running_mean + (1 - momentum) * sample_mean
     running_var = momentum * running_var + (1 - momentum) * sample_var
+
+    x_hat = (x - sample_mean) / (np.sqrt(sample_var + eps))
+    out = x_hat * gamma + beta
+
+    cache = (x, x_hat, sample_mean, sample_var, gamma, eps)
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -185,8 +185,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # and shift the normalized data using gamma and beta. Store the result in   #
     # the out variable.                                                         #
     #############################################################################
-    out = (x - running_mean) / np.sqrt(running_var)
-    out = out * gamma - beta
+    out = (x - running_mean) / np.sqrt(running_var + eps)
+    out = out * gamma + beta
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -217,16 +217,44 @@ def batchnorm_backward(dout, cache):
   - dgamma: Gradient with respect to scale parameter gamma, of shape (D,)
   - dbeta: Gradient with respect to shift parameter beta, of shape (D,)
   """
+  x, x_hat, sample_mean, sample_var, gamma, eps = cache
+  N, D = x.shape
+
   dx, dgamma, dbeta = None, None, None
   #############################################################################
   # TODO: Implement the backward pass for batch normalization. Store the      #
   # results in the dx, dgamma, and dbeta variables.                           #
   #############################################################################
-  pass
+
+  # STILL WRONG!
+  # dx_part1 = (gamma / np.sqrt(sample_var + eps))
+  # # dsample_mean
+  # dx_part2 = 1 / (D * np.sqrt(sample_var + eps))
+  # # dsample_var
+  # dx_part3  = sample_mean / sample_var * .5 * (1 / np.power(sample_var, -.5)) * (1 - 2 * N / D)
+
+  # print(dx_part1.shape)
+  # print(dx_part2.shape)
+  # print(dx_part3.shape)
+
+  # dx = (dx_part1 + dx_part2 + dx_part3) * dout
+
+  # https://github.com/bagavi/CS231N/blob/master/assignment2/cs231n/layers.py
+  dx_hat = dout*gamma
+  dvar   = -0.5*np.sum( dx_hat*(x - sample_mean)*np.power( (sample_var + eps) , -1.5), axis=0)
+  dmean  = -1*np.sum( dx_hat/np.power(sample_var + eps , 0.5), axis = 0)
+  dx     = dx_hat*np.power(sample_var + eps , -0.5)
+  dx    += 2*dvar*(x - sample_mean)/x.shape[0]
+  dx    += dmean/x.shape[0]
+
+
+  # sum gradients along all N samples
+  dgamma = (x_hat * dout).sum(axis=0)
+
+  dbeta = np.sum(dout, axis=0)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
-
   return dx, dgamma, dbeta
 
 
