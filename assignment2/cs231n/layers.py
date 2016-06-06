@@ -395,32 +395,51 @@ def conv_forward_naive(x, w, b, conv_param):
   F, C, HH, WW = w.shape
   stride = conv_param['stride']
   pad = conv_param['pad']
-  Hprime = 1 + (H + 2 * pad - HH) / stride
-  Wprime = 1 + (W + 2 * pad - WW) / stride
+  Ho = 1 + (H + 2 * pad - HH) / stride
+  Wo = 1 + (W + 2 * pad - WW) / stride
 
-  out = []
-  for ni in xrange(N):
-    out.append([])
-    for ci in xrange(C):
-      out[ni].append([])
-      xi_padded = np.pad(x[ni][ci], pad, 'constant')
-      for fi in xrange(F):
-        wi = w[fi, ci, :, :]
-        wi = wi.reshape(1, -1)
-        out[ni][ci].append(np.zeros([Hprime, Wprime]))
-        # c_out: out for a specific channel
-        c_out = out[ni][ci][fi]
-        for hpi in xrange(Hprime):
-          for wpi in xrange(Wprime):
-            # xi_conv the part of xi that will be convolved with wi
-            xi_conv = xi_padded[hpi*stride:hpi*stride+HH,
-                                wpi*stride:wpi*stride+WW]
-            xi_conv = xi_conv.reshape(1, -1)
-            # b[fi] / C: because it will be summed over the channel axis later
-            c_out[hpi][wpi] = wi.dot(xi_conv.T) + b[fi] / C 
-  # sum along the channel axis
-  out = np.array(out).sum(axis=1)
-  print('out.shape: {0}'.format(out.shape))
+  # This is zyxue's solution
+  # out = []
+  # for ni in xrange(N):
+  #   out.append([])
+  #   for ci in xrange(C):
+  #     out[ni].append([])
+  #     xi_padded = np.pad(x[ni][ci], pad, 'constant')
+  #     for fi in xrange(F):
+  #       wi = w[fi, ci, :, :]
+  #       wi = wi.reshape(1, -1)
+  #       out[ni][ci].append(np.zeros([Ho, Wo]))
+  #       # c_out: out for a specific channel
+  #       c_out = out[ni][ci][fi]
+  #       for hpi in xrange(Ho):
+  #         for wpi in xrange(Wo):
+  #           # xi_conv the part of xi that will be convolved with wi
+  #           xi_conv = xi_padded[hpi*stride:hpi*stride+HH,
+  #                               wpi*stride:wpi*stride+WW]
+  #           xi_conv = xi_conv.reshape(1, -1)
+  #           # b[fi] / C: because it will be summed over the channel axis later
+  #           c_out[hpi][wpi] = wi.dot(xi_conv.T) + b[fi] / C 
+  # # sum along the channel axis
+  # out = np.array(out).sum(axis=1)
+  # # print('out.shape: {0}'.format(out.shape))
+
+  # solution from
+  # https://github.com/bagavi/CS231N/blob/master/assignment2%20copy/cs231n/layers.py
+
+  out = np.zeros([N, F, Ho, Wo])
+
+  # Padding only on H and W axis
+  x =  np.pad(x, [(0,0),(0,0),(pad, pad), (pad, pad)], mode='constant')
+
+  #Looping
+  for i1 in xrange(N):
+    for i2 in xrange(F):
+      for i3 in xrange(Ho):
+        for i4 in xrange(Wo):
+          out[i1,i2,i3,i4]=np.sum(
+            x[i1, : , i3*stride:i3*stride+HH, i4*stride:i4*stride+WW] *
+            w[i2, :, :, :]) + b[i2]
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
