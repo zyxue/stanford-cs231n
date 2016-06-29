@@ -6,6 +6,8 @@ This file defines layer types that are commonly used for recurrent neural
 networks.
 """
 
+# https://github.com/mesuvash/KnowledgeQuest/blob/master/CS/machine_learning/courses/stanford/cs231n/assignment3/cs231n/rnn_layers.py
+
 
 def rnn_step_forward(x, prev_h, Wx, Wh, b):
   """
@@ -164,7 +166,25 @@ def rnn_backward(dh, cache):
   # sequence of data. You should use the rnn_step_backward function that you   #
   # defined above.                                                             #
   ##############################################################################
-  pass
+  N, T, H = dh.shape
+  x, prev_h, Wx, Wh, next_h, b = cache[0]
+  D = x.shape[1]
+
+  dx = np.zeros((N, T, D))
+  dh0 = np.zeros_like(prev_h)
+  dWx = np.zeros_like(Wx)
+  dWh = np.zeros_like(Wh)
+  db = np.zeros_like(b)
+
+  tdprev_h = np.zeros((N, H))
+
+  for i in range(T - 1, -1, -1):
+    tdx, tdprev_h, tdWx, tdWh, tdb = rnn_step_backward(dh[:, i, :] + tdprev_h, cache[i])
+    dx[:, i, :] = tdx
+    dWx += tdWx
+    dWh += tdWh
+    db += tdb
+  dh0 = tdprev_h
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
