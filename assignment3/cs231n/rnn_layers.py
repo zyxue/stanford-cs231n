@@ -349,14 +349,45 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
   - dWh: Gradient of hidden-to-hidden weights, of shape (H, 4H)
   - db: Gradient of biases, of shape (4H,)
   """
-  dx, dh, dc, dWx, dWh, db = None, None, None, None, None, None
+  dx, dprev_h, dprev_c, dWx, dWh, db = None, None, None, None, None, None
   #############################################################################
   # TODO: Implement the backward pass for a single timestep of an LSTM.       #
   #                                                                           #
   # HINT: For sigmoid and tanh you can compute local derivatives in terms of  #
   # the output value from the nonlinearity.                                   #
   #############################################################################
-  pass
+
+  (x, prev_h, prev_c, Wx, Wh, b,
+   ai, af, ao, ag, i, f, o, g, next_c, next_h) = cache
+
+  # backpropagate into 5
+  do = np.tanh(next_c) * dnext_h
+  # not sure why this step yet
+  # https://github.com/cthorey/CS231/commit/040d4fcceec90c5677438628b13a0d1deca5632b
+  dnext_c += o * (1 - np.tanh(next_c)**2) * dnext_h
+
+  # backpropagate into 4
+  df = prev_c * dnext_c
+  dprev_c = f * dnext_c
+  di = g * dnext_c
+  dg = i * dnext_c
+
+  # backpropagate into 3
+  dag = (1 - np.tanh(ag)**2) * dg
+  dao = sigmoid(ao) * (1 - sigmoid(ao)) * do
+  daf = sigmoid(af) * (1 - sigmoid(af)) * df
+  dai = sigmoid(ai) * (1 - sigmoid(ai)) * di
+
+  # opposite of hsplit at 2
+  da = np.hstack([dai, daf, dao, dag])
+
+  # backpropagate into 1
+  dx = da.dot(Wx.T)
+  dprev_h = da.dot(Wh.T)
+  dWx = x.T.dot(da)
+  dWh = prev_h.T.dot(da)
+  db = da.sum(axis=0)
+
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
