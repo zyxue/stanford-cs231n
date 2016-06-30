@@ -212,6 +212,10 @@ def word_embedding_forward(x, W):
   #                                                                            #
   # HINT: This should be very simple.                                          #
   ##############################################################################
+
+  # for i in range(N):
+  #   out[i, :, :] = W[x[i, :]]
+
   out = W[x]
   cache = (x, W)
   ##############################################################################
@@ -246,10 +250,11 @@ def word_embedding_backward(dout, cache):
 
   dW = np.zeros_like(W)
 
-  for i in range(N):
-    indices = x[i, :]
-    np.add.at(dW, indices, dout[i, :, :])
+  # for i in range(N):
+  #   indices = x[i, :]
+  #   np.add.at(dW, indices, dout[i, :, :])
 
+  np.add.at(dW, x, dout)
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
@@ -295,7 +300,22 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
   # TODO: Implement the forward pass for a single timestep of an LSTM.        #
   # You may want to use the numerically stable sigmoid implementation above.  #
   #############################################################################
-  pass
+
+  N, H = prev_h.shape
+
+  res = (np.dot(prev_h, Wh) + np.dot(x, Wx) + b)
+  ai, af, ao, ag = np.hsplit(res, 4)
+
+  res_i = sigmoid(ai)
+  res_f = sigmoid(af)
+  res_o = sigmoid(ao)
+  res_g = np.tanh(ag)
+
+  next_c = np.multiply(res_f, prev_c) + np.multiply(res_i , res_g)
+  next_h = np.multiply(res_o, np.tanh(next_c))
+
+  cache = (x, prev_h, prev_c, Wx, Wh, b)
+
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
