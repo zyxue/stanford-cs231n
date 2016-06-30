@@ -140,13 +140,20 @@ class CaptioningRNN(object):
     w_out, w_cache = word_embedding_forward(captions_in, W_embed)
     if self.cell_type == 'rnn':
       h_out, h_cache = rnn_forward(w_out, h0_out, Wx, Wh, b)
-      af_out, af_cache = temporal_affine_forward(h_out, W_vocab, b_vocab)
-      loss, dout = temporal_softmax_loss(af_out, captions_out, mask)
+    elif self.cell_type == 'lstm':
+      h_out, h_cache = lstm_forward(w_out, h0_out, Wx, Wh, b)
 
-      af_dout, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dout, af_cache)
+    af_out, af_cache = temporal_affine_forward(h_out, W_vocab, b_vocab)
+    loss, dout = temporal_softmax_loss(af_out, captions_out, mask)
+
+    af_dout, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dout, af_cache)
+    if self.cell_type == 'rnn':
       h_dout, h_dh, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(af_dout, h_cache)
-      grads['W_embed'] = word_embedding_backward(h_dout, w_cache)
-      _, grads['W_proj'], grads['b_proj'] = affine_backward(h_dh, h0_cache)
+    elif self.cell_type == 'lstm':
+      h_dout, h_dh, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(af_dout, h_cache)
+
+    grads['W_embed'] = word_embedding_backward(h_dout, w_cache)
+    _, grads['W_proj'], grads['b_proj'] = affine_backward(h_dh, h0_cache)
 
     ############################################################################
     #                             END OF YOUR CODE                             #
