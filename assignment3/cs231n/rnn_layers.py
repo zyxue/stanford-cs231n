@@ -303,18 +303,27 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
 
   N, H = prev_h.shape
 
+  # 1. compute the intermediate vector
   res = (np.dot(prev_h, Wh) + np.dot(x, Wx) + b)
+
+  # 2. split into the gates
   ai, af, ao, ag = np.hsplit(res, 4)
 
-  res_i = sigmoid(ai)
-  res_f = sigmoid(af)
-  res_o = sigmoid(ao)
-  res_g = np.tanh(ag)
+  # 3. compute the gates
+  i = sigmoid(ai)
+  f = sigmoid(af)
+  o = sigmoid(ao)
+  g = np.tanh(ag)
 
-  next_c = np.multiply(res_f, prev_c) + np.multiply(res_i , res_g)
-  next_h = np.multiply(res_o, np.tanh(next_c))
+  # 4. compute the next cell state
+  next_c = np.multiply(f, prev_c) + np.multiply(i , g)
 
-  cache = (x, prev_h, prev_c, Wx, Wh, b)
+  # 5. compute the next hidden state
+  next_h = np.multiply(o, np.tanh(next_c))
+
+  # cache = (x, prev_h, prev_c, Wx, Wh, b)
+  cache = (x, prev_h, prev_c, Wx, Wh, b,
+           ai, af, ao, ag, i, f, o, g, next_c, next_h)
 
   ##############################################################################
   #                               END OF YOUR CODE                             #
