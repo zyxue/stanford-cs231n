@@ -217,22 +217,29 @@ class CaptioningRNN(object):
     # a loop.                                                                 #
     ###########################################################################
 
-    h0, h0_cache = affine_forward(features, W_proj, b_proj)
+    h0, _ = affine_forward(features, W_proj, b_proj)
+    N, H = h0.shape
+
+    captions[:, 0] = self._start
+    prev_h = h0
+    prev_c = np.zeros((N, H))
 
     for i in range(max_length):
-      word = np.ones((N, 1), dtype=np.int32) * self._start
-      wembed, wembed_cache = word_embedding_forward(word, W_embed)
+      # reshape(-1, 1) to become (N, T), where T equals 1
+      wembed, _ = word_embedding_forward(captions[:, i].reshape(-1, 1), W_embed)
+      # wembed, _ = word_embedding_forward(captions[:, i], W_embed)
       if self.cell_type == "rnn":
-        rnn_h, rnn_h_cache = rnn_step_forward(np.squeeze(wembed), h0, Wx, Wh, b)
-        wembed, wembed_cache = word_embedding_forward(word, W_embed)
+        prev_h, _ = rnn_step_forward(np.squeeze(wembed), prev_h, Wx, Wh, b)
+      elif self.cell_type == 'lstm':
+        prev_h, prev_c, _ = lstm_step_forward(np.squeeze(wembed), prev_h, prev_c, Wx, Wh, b)
 
-        rnn_out, rnn_out_cache = temporal_affine_forward(
-          rnn_h.reshape((N,1,-1)), W_vocab, b_vocab)
+      out, _ = temporal_affine_forward(prev_h.reshape((N, 1, -1)), W_vocab, b_vocab)
 
-        h0 = rnn_h
-
-        predicted_word = np.argmax(np.squeeze(rnn_out), axis=1)
-        captions[:, i] = predicted_word
+      # np.squeeze: remove single-dimensional entries from the shape of an array.
+      # e.g. out.shape: (2, 1, 1004) for two images
+      # then np.squeeze(out).shape becomes (2, 1004)
+      predicted_word_idx = np.argmax(np.squeeze(out), axis=1)
+      captions[:, i] = predicted_word_idx
 
     ############################################################################
     #                             END OF YOUR CODE                             #
