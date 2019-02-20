@@ -1,3 +1,7 @@
+# CS231n: Convolutional Neural Networks for Visual Recognition 
+
+This repo is used for the Winter 2016 version: http://cs231n.stanford.edu/2016/
+
 ## Setup
 
 ```
